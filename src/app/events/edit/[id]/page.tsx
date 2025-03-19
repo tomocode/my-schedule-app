@@ -3,17 +3,19 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { events, toClientEvent } from '@/lib/db/schema'; // toClientEventをインポート
+import { events, toClientEvent } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import EventForm from '@/components/events/EventForm';
 import { JSX } from 'react';
 
 export default async function EditEventPage({
-  params
+  params,
+  searchParams: _searchParams,
 }: {
-    params: { id: string };
-  }): Promise<JSX.Element> {
-    const id = params.id;
+  params: { id: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+}): Promise<JSX.Element> {
+  const id = params.id;
 
   // ログイン状態をチェック
   const supabase = createServerComponentClient({ cookies });
@@ -47,7 +49,7 @@ export default async function EditEventPage({
     id: clientEvent.id,
     title: clientEvent.title,
     description: clientEvent.description || '',
-    startTime: clientEvent.startTime.slice(0, 16), // ISO文字列の時刻部分のみを使用
+    startTime: clientEvent.startTime.slice(0, 16),
     endTime: clientEvent.endTime.slice(0, 16)
   };
 

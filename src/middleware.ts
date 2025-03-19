@@ -8,7 +8,7 @@ export async function middleware(request: NextRequest) {
   const supabase = createMiddlewareClient({ req: request, res });
 
   // セッションの更新
-  const { data: { session } } = await supabase.auth.getSession();
+  await supabase.auth.getSession();
 
   return res;
 }

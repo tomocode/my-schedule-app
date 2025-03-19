@@ -14,8 +14,6 @@ type Event = {
   endTime: string;
 };
 
-type CalendarValue = Date | Date[] | null;
-
 type CalendarViewProps = {
   events: Event[];
 };

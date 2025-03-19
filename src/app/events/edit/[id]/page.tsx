@@ -9,11 +9,9 @@ import EventForm from '@/components/events/EventForm';
 import { JSX } from 'react';
 
 export default async function EditEventPage({
-  params,
-  searchParams: _searchParams,
+  params
 }: {
   params: Promise<{ id: string }>;
-  searchParams: { [key: string]: string | string[] | undefined };
 }): Promise<JSX.Element> {
   // await して params を解決する
   const { id } = await params;

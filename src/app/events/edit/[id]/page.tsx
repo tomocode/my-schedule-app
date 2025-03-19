@@ -12,10 +12,11 @@ export default async function EditEventPage({
   params,
   searchParams: _searchParams,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
   searchParams: { [key: string]: string | string[] | undefined };
 }): Promise<JSX.Element> {
-  const id = params.id;
+  // await して params を解決する
+  const { id } = await params;
 
   // ログイン状態をチェック
   const supabase = createServerComponentClient({ cookies });

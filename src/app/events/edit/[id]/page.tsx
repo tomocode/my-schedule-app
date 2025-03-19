@@ -6,13 +6,14 @@ import { db } from '@/lib/db';
 import { events, toClientEvent } from '@/lib/db/schema'; // toClientEventをインポート
 import { eq, and } from 'drizzle-orm';
 import EventForm from '@/components/events/EventForm';
+import { JSX } from 'react';
 
 export default async function EditEventPage({
   params
 }: {
-  params: { id: string }
-}) {
-  const id = params.id;
+    params: { id: string };
+  }): Promise<JSX.Element> {
+    const id = params.id;
 
   // ログイン状態をチェック
   const supabase = createServerComponentClient({ cookies });

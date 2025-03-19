@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { handle } from "hono/vercel";
 
 import events from "./events";
+import { eventData } from "@/lib/db/schema";
 
 export const runtime = "edge";
 
@@ -15,10 +16,10 @@ export type AppType = typeof app & {
     api: {
       events: {
         $get: () => Promise<Response>;
-        $post: (opts: { json: EventClient }) => Promise<Response>;
+        $post: (opts: { json: eventData }) => Promise<Response>;
         ':id': {
           $get: (opts: { param: { id: string } }) => Promise<Response>;
-          $put: (opts: { param: { id: string }, json: EventClient }) => Promise<Response>;
+          $put: (opts: { param: { id: string }, json: eventData }) => Promise<Response>;
           $delete: (opts: { param: { id: string } }) => Promise<Response>;
         };
       };

@@ -106,6 +106,13 @@ export type EventClient = Omit<EventSelect, 'startTime' | 'endTime' | 'createdAt
   description?: string;
 };
 
+export type eventData = {
+  title: string;
+  description?: string;
+  startTime: string;
+  endTime: string;
+}
+
 // イベントをクライアント形式に変換
 export function toClientEvent(event: EventSelect): EventClient {
   return {

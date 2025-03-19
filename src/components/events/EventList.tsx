@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEvents } from '@/lib/hooks/use-events'; // 修正: パスを変更、Event型を削除
 import { EventClient } from '@/lib/db/schema'; // 追加: スキーマから型をインポート
 
@@ -13,7 +12,6 @@ type EventListProps = {
 
 export default function EventList({ initialEvents }: EventListProps) {
   const [events, setEvents] = useState<EventClient[]>(initialEvents); // 修正: EventClient型を使用
-  const router = useRouter();
   const { deleteEvent, isLoading, error } = useEvents();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 

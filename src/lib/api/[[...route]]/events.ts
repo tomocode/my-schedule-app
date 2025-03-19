@@ -3,8 +3,7 @@ import { db } from "@/lib/db";
 import { events, toClientEvent } from "@/lib/db/schema"; // toClientEventをインポート
 import { zValidator } from "@hono/zod-validator";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { Hono } from "hono";
-import type { Context, MiddlewareHandler } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { eq, and } from "drizzle-orm";
@@ -117,19 +116,19 @@ const app = new Hono<{
   })
 
   // 新しいイベントを作成
-  .post("/", zValidator("json", eventSchema), async (c) => {
+  .post("/", zValidator('json', eventSchema), async (c) => {
     const userId = c.get('userId');
-    const eventData = c.req.valid("json");
+    const eventData = c.req.valid('json');
 
     try {
-      // イベントをデータベースに保存
       const [newEvent] = await db.insert(events)
         .values({
-          title: eventData.title,
-          description: eventData.description || "",
+          ...eventData,
           startTime: new Date(eventData.startTime),
           endTime: new Date(eventData.endTime),
-          userId: userId
+          createdAt: eventData.createdAt ? new Date(eventData.createdAt) : undefined,
+          updatedAt: eventData.updatedAt ? new Date(eventData.updatedAt) : undefined,
+          userId,
         })
         .returning();
 
@@ -147,40 +146,34 @@ const app = new Hono<{
   })
 
   // イベントを更新
-  .put("/:id", zValidator("json", eventSchema), async (c) => {
+  .put("/:id", zValidator('json', eventSchema), async (c) => {
     const userId = c.get('userId');
     const id = c.req.param("id");
-    const eventData = c.req.valid("json");
+    const eventData = c.req.valid('json');
 
     try {
-      // イベントが存在し、ユーザーに紐づいているか確認
-      const [existingEvent] = await db.select()
-        .from(events)
+      const [updatedEvent] = await db.update(events)
+        .set({
+          ...eventData,
+          startTime: new Date(eventData.startTime),
+          endTime: new Date(eventData.endTime),
+          createdAt: eventData.createdAt ? new Date(eventData.createdAt) : null,
+          updatedAt: eventData.updatedAt ? new Date(eventData.updatedAt) : null
+        })
         .where(
           and(
             eq(events.id, id),
             eq(events.userId, userId)
           )
-        );
+        )
+        .returning();
 
-      if (!existingEvent) {
+      if (!updatedEvent) {
         return c.json(
           { success: false, error: "イベントが見つかりません" },
           { status: 404 }
         );
       }
-
-      // イベントを更新
-      const [updatedEvent] = await db.update(events)
-        .set({
-          title: eventData.title,
-          description: eventData.description || "",
-          startTime: new Date(eventData.startTime),
-          endTime: new Date(eventData.endTime),
-          updatedAt: new Date()
-        })
-        .where(eq(events.id, id))
-        .returning();
 
       // クライアント形式に変換
       const clientEvent = toClientEvent(updatedEvent);
@@ -201,31 +194,26 @@ const app = new Hono<{
     const id = c.req.param("id");
 
     try {
-      // イベントが存在し、ユーザーに紐づいているか確認
-      const [existingEvent] = await db.select()
-        .from(events)
+      const [deletedEvent] = await db.delete(events)
         .where(
           and(
             eq(events.id, id),
             eq(events.userId, userId)
           )
-        );
+        )
+        .returning();
 
-      if (!existingEvent) {
+      if (!deletedEvent) {
         return c.json(
           { success: false, error: "イベントが見つかりません" },
           { status: 404 }
         );
       }
 
-      // イベントを削除
-      await db.delete(events)
-        .where(eq(events.id, id));
+      // クライアント形式に変換
+      const clientEvent = toClientEvent(deletedEvent);
 
-      return c.json({
-        success: true,
-        data: { message: "イベントを削除しました" }
-      });
+      return c.json({ success: true, data: clientEvent });
     } catch (error) {
       console.error("Error deleting event:", error);
       return c.json(

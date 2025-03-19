@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import Calendar from 'react-calendar';
+import Calendar, { CalendarProps } from 'react-calendar';
 import { format } from 'date-fns';
 import 'react-calendar/dist/Calendar.css';
 
@@ -50,8 +50,8 @@ export default function CalendarView({ events }: CalendarViewProps) {
     );
   };
 
-// 日付がクリックされたときの処理
-  const handleDateClick = (value: CalendarValue) => {
+  // 日付がクリックされたときの処理
+  const handleDateClick: CalendarProps['onChange'] = (value) => {
     if (value instanceof Date) {
       setDate(value);
       setSelectedEvent(null);
@@ -75,10 +75,10 @@ export default function CalendarView({ events }: CalendarViewProps) {
         {/* カレンダー */}
         <div>
           <Calendar
-            onChange={handleDateClick as any}
+            onChange={handleDateClick}
             value={date}
             tileContent={tileContent}
-            className="border rounded shadow p-4 w -full"
+            className="border rounded shadow p-4 w-full"
           />
         </div>
 
@@ -99,33 +99,26 @@ export default function CalendarView({ events }: CalendarViewProps) {
                   onClick={() => setSelectedEvent(event)}
                 >
                   <div className="font-medium">{event.title}</div>
-                  <div className="text-sm text-gray-600">
-                    {format(new Date(event.startTime), 'HH:mm')} - {format(new Date(event.endTime), 'HH:mm')}
+                  <div className="text-sm text-gray-500">
+                    {formatDateTime(event.startTime)} - {formatDateTime(event.endTime)}
                   </div>
                 </div>
               ))}
             </div>
           )}
-
-          {/* イベント詳細 */}
-          {selectedEvent && (
-            <div className="mt-6 p-4 bg-gray-50 rounded">
-              <h4 className="text-lg font-semibold">{selectedEvent.title}</h4>
-              <div className="mt-2 text-sm">
-                <p><span className="font-medium">開始:</span> {formatDateTime(selectedEvent.startTime)}</p>
-                <p><span className="font-medium">終了:</span> {formatDateTime(selectedEvent.endTime)}</p>
-
-                {selectedEvent.description && (
-                  <div className="mt-2">
-                    <p className="font-medium">説明:</p>
-                    <p className="whitespace-pre-line">{selectedEvent.description}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* 選択したイベントの詳細 */}
+      {selectedEvent && (
+        <div className="mt-6 border rounded shadow p-4">
+          <h3 className="text-xl font-semibold mb-4">{selectedEvent.title}</h3>
+          <p className="text-gray-700">{selectedEvent.description}</p>
+          <div className="mt-4 text-sm text-gray-500">
+            {formatDateTime(selectedEvent.startTime)} - {formatDateTime(selectedEvent.endTime)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

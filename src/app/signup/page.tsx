@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
+import { AuthError } from '@supabase/supabase-js';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -43,8 +44,12 @@ export default function Signup() {
       // 登録成功メッセージ
       alert('登録確認メールを送信しました。メールを確認してアカウントを有効化してください。');
       router.push('/login');
-    } catch (error: any) {
-      setError(error.message || '登録に失敗しました');
+    } catch (error: unknown) {
+      if (error instanceof AuthError) {
+        setError(error.message);
+      } else {
+        setError('登録に失敗しました');
+      }
     } finally {
       setLoading(false);
     }

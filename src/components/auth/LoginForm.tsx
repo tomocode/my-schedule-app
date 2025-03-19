@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { AuthError } from '@supabase/supabase-js';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -18,7 +19,7 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -30,8 +31,12 @@ export default function LoginForm() {
       // ログイン成功
       router.push('/dashboard');
       router.refresh(); // セッション情報を更新
-    } catch (err: any) {
-      setError(err.message || 'ログインに失敗しました');
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('ログインに失敗しました');
+      }
     } finally {
       setLoading(false);
     }

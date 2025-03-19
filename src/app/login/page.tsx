@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
+import { AuthError } from '@supabase/supabase-js';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -32,8 +33,12 @@ export default function Login() {
       // ログイン成功時はダッシュボードへリダイレクト
       router.push('/dashboard');
       router.refresh();
-    } catch (error: any) {
-      setError(error.message || 'ログインに失敗しました');
+    } catch (error: unknown) {
+      if (error instanceof AuthError) {
+        setError(error.message);
+      } else {
+        setError('ログインに失敗しました');
+      }
     } finally {
       setLoading(false);
     }
@@ -55,8 +60,12 @@ export default function Login() {
       if (error) {
         throw error;
       }
-    } catch (error: any) {
-      setError(error.message || 'Googleログインに失敗しました');
+    } catch (error: unknown) {
+      if (error instanceof AuthError) {
+        setError(error.message);
+      } else {
+        setError('Googleログインに失敗しました');
+      }
       setLoading(false);
     }
   };

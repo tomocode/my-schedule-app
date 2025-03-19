@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { AuthError } from '@supabase/supabase-js';
 
 export default function SignupForm() {
   const [email, setEmail] = useState('');
@@ -49,8 +50,12 @@ export default function SignupForm() {
         router.push('/dashboard');
         router.refresh(); // セッション情報を更新
       }
-    } catch (err: any) {
-      setError(err.message || '登録に失敗しました');
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('登録に失敗しました');
+      }
     } finally {
       setLoading(false);
     }
@@ -106,9 +111,7 @@ export default function SignupForm() {
             onChange={(e) => setPassword(e.target.value)}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             required
-            minLength={6}
           />
-          <p className="text-xs text-gray-500 mt-1">パスワードは6文字以上にしてください</p>
         </div>
 
         <div className="flex items-center justify-between">
@@ -117,13 +120,13 @@ export default function SignupForm() {
             disabled={loading}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
           >
-            {loading ? '登録中...' : '登録する'}
+            {loading ? '登録中...' : '新規登録'}
           </button>
         </div>
       </form>
 
       <div className="mt-4 text-center">
-        <p>すでにアカウントをお持ちの場合は、<a href="/login" className="text-blue-500 hover:text-blue-800">ログイン</a>してください</p>
+        <p>既にアカウントをお持ちの場合は、<a href="/login" className="text-blue-500 hover:text-blue-800">ログイン</a>してください</p>
       </div>
     </div>
   );

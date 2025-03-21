@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import Header from "@/components/layout/Header";
+import { createClient } from "@/utils/supabase/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,9 +25,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // サーバーサイドでSupabaseクライアントを作成
-  const cookieStore = cookies();
-  const supabase = createServerComponentClient({ cookies: () => cookieStore });
-  
+  const supabase = await createClient();
+
   // ユーザーセッションを取得
   const {
     data: { session },

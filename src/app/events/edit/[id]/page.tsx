@@ -1,6 +1,5 @@
 // src/app/events/edit/[id]/page.tsx
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { events, toClientEvent } from '@/lib/db/schema';
@@ -17,11 +16,11 @@ export default async function EditEventPage({
   const { id } = await params;
 
   // ログイン状態をチェック
-  const supabase = createServerComponentClient({ cookies });
-  const { data: { session } } = await supabase.auth.getSession();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   // 未ログインの場合はログインページにリダイレクト
-  if (!session) {
+  if (!user) {
     redirect('/login');
   }
 
@@ -31,7 +30,7 @@ export default async function EditEventPage({
     .where(
       and(
         eq(events.id, id),
-        eq(events.userId, session.user.id)
+        eq(events.userId, user.id)
       )
     );
 

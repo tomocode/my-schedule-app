@@ -2,10 +2,9 @@
 import { db } from "@/lib/db";
 import { events, toClientEvent } from "@/lib/db/schema"; // toClientEventをインポート
 import { zValidator } from "@hono/zod-validator";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/utils/supabase/server";
 import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
-import { cookies } from "next/headers";
 import { eq, and } from "drizzle-orm";
 
 // カスタムの変数型を定義
@@ -35,10 +34,10 @@ export const eventSchema = z.object({
 const authMiddleware: MiddlewareHandler<{
   Variables: Variables;
 }> = async (c, next) => {
-  const supabase = createRouteHandlerClient({ cookies });
-  const { data: { session } } = await supabase.auth.getSession();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     return c.json(
       { success: false, error: "認証が必要です" },
       { status: 401 }
@@ -46,7 +45,7 @@ const authMiddleware: MiddlewareHandler<{
   }
 
   // ユーザーIDを変数として設定
-  c.set('userId', session.user.id);
+  c.set('userId', user.id);
   await next();
 };
 

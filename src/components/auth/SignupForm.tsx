@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
+import { createClient  } from '@/utils/supabase/client';
 import { AuthError } from '@supabase/supabase-js';
 
 export default function SignupForm() {
@@ -21,7 +21,7 @@ export default function SignupForm() {
 
     try {
       // 新規ユーザー登録
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await createClient().auth.signUp({
         email,
         password,
       });
@@ -32,7 +32,7 @@ export default function SignupForm() {
 
       if (authData.user) {
         // プロフィール情報を登録
-        const { error: profileError } = await supabase
+        const { error: profileError } = await createClient()
           .from('profiles')
           .insert([
             {

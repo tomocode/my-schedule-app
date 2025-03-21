@@ -1,19 +1,40 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+// src/lib/api/middleware.ts
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// このミドルウェアは全てのリクエストで実行され、認証状態を確認します
 export async function middleware(request: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req: request, res });
+  // 初期のレスポンスを作成（リクエストヘッダーをそのまま引き継ぐ）
+  const response = NextResponse.next({
+    request: { headers: request.headers },
+  });
 
-  // セッションの更新
+  // Supabase クライアントの作成
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        // cookies() を非同期に取得するための関数
+        getAll() {
+          return request.cookies.getAll();
+        },
+        // 取得したクッキーをレスポンスに設定する処理
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+
+  // セッションの更新（必要に応じてこれでクッキーの更新が行われる）
   await supabase.auth.getSession();
 
-  return res;
+  return response;
 }
 
-// 特定のパスのみミドルウェアを実行（静的ファイルは除外）
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',

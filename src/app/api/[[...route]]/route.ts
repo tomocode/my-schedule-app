@@ -1,11 +1,11 @@
-// src/app/api/[[...route]]/route.ts
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
 
 import events from "./events";
 import { eventData } from "@/lib/db/schema";
 
-export const runtime = "edge";
+// Edgeランタイムを削除し、デフォルトのNode.jsランタイムを使用
+// export const runtime = "edge";
 
 // basePath は API ルートのベースパスを指定します
 // 以降、新たに追加する API ルートはこのパスを基準に追加されます

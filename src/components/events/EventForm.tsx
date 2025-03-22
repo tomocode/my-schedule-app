@@ -1,9 +1,8 @@
-// src/components/events/EventForm.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEvents } from '@/lib/hooks/use-events'; // インポートパスを修正
+import { useEvents } from '@/lib/hooks/use-events';
 
 type EventFormProps = {
   initialData?: {
@@ -37,9 +36,16 @@ export default function EventForm({ initialData, isEditing = false }: EventFormP
     }
   }, [initialData]);
 
-  // 日時をフォーム入力用に整形
+  // 日時をフォーム入力用に整形（ブラウザ互換性向上）
   const formatDateTimeForInput = (date: Date) => {
-    return date.toISOString().slice(0, 16);
+    // YYYY-MM-DDThh:mm 形式に変換
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   const validateForm = () => {
@@ -75,22 +81,52 @@ export default function EventForm({ initialData, isEditing = false }: EventFormP
       return;
     }
 
+    // 日時をISO 8601形式に確実に変換
+    const formatToISOString = (dateTimeStr: string): string => {
+      // datetime-localから取得した値が既にISO形式に近い場合は、そのままDate変換
+      try {
+        const dateObj = new Date(dateTimeStr);
+        if (isNaN(dateObj.getTime())) {
+          throw new Error('Invalid date');
+        }
+        return dateObj.toISOString();
+      } catch (e) {
+        // フォールバック：手動でパース
+        // 例: "2025/03/21 13:32" → "2025-03-21T13:32:00.000Z"
+        console.error('日付解析エラー:', e);
+        const parts = dateTimeStr.split(/[\/\s:]/);
+        if (parts.length >= 5) {
+          const [year, month, day, hour, minute] = parts;
+          const isoStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00.000Z`;
+          return isoStr;
+        }
+        return dateTimeStr; // パースできなければそのまま返す（エラーハンドリングはサーバー側で）
+      }
+    };
+
     const eventData = {
       title,
       description,
-      startTime,
-      endTime,
+      startTime: formatToISOString(startTime),
+      endTime: formatToISOString(endTime),
     };
 
-    if (isEditing && initialData?.id) {
-      await updateEvent(initialData.id, eventData);
-    } else {
-      await createEvent(eventData);
+    try {
+      console.log('送信データ:', eventData); // デバッグ用
+      if (isEditing && initialData?.id) {
+        await updateEvent(initialData.id, eventData);
+      } else {
+        await createEvent(eventData);
+      }
+    } catch (error) {
+      // エラーハンドリングはuseEvents内で行われるので、ここでは何もしない
+      console.error('Error submitting form:', error);
     }
   };
 
   // 表示するエラーメッセージ
-  const errorMessage = localError || apiError;
+  // APIエラーがあれば文字列に変換して表示（オブジェクトの場合は文字列化）
+  const errorMessage = localError || (apiError ? (typeof apiError === 'string' ? apiError : JSON.stringify(apiError)) : null);
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">

@@ -17,11 +17,24 @@ export const eventSchema = z.object({
   id: z.string().uuid().optional(),
   title: z.string().min(1, "タイトルは必須です"),
   description: z.string().optional(),
-  startTime: z.string().datetime({ message: "有効な日時形式である必要があります" }),
-  endTime: z.string().datetime({ message: "有効な日時形式である必要があります" }),
+  // 日時文字列を受け取り、Date型に変換できることを確認
+  startTime: z.string().refine(
+    (val) => !isNaN(new Date(val).getTime()),
+    { message: "有効な日時形式である必要があります" }
+  ),
+  endTime: z.string().refine(
+    (val) => !isNaN(new Date(val).getTime()),
+    { message: "有効な日時形式である必要があります" }
+  ),
   userId: z.string().uuid().optional(),
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
+  createdAt: z.string().optional().refine(
+    (val) => val === undefined || !isNaN(new Date(val).getTime()),
+    { message: "有効な日時形式である必要があります" }
+  ),
+  updatedAt: z.string().optional().refine(
+    (val) => val === undefined || !isNaN(new Date(val).getTime()),
+    { message: "有効な日時形式である必要があります" }
+  ),
 }).refine(
   data => new Date(data.startTime) < new Date(data.endTime),
   {
